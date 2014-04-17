@@ -13,6 +13,7 @@ function R = get_hash_hits(H)
 	end
 
 	global HashTable HashTableCounts
+    size(HashTable)
 	nhtcols = size(HashTable,1); %gets the number of rows of HashTable
 
 	TIMESIZE=16384; % pissing me off
@@ -21,6 +22,8 @@ function R = get_hash_hits(H)
 	R = zeros(Rsize,3); % Create a 1000 X 3 matrix. 
 	Rmax = 0;
 
+    
+    % disp('Finsihed this bit');
 	for i=1:length(H)
 		hash = H(i,2); % get the hash
 		htime = double(H(i,1)); % get the exact time offset
@@ -41,7 +44,8 @@ function R = get_hash_hits(H)
   	    R(Rmax+[1:nentries],:) = [video_id, dtimes, repmat(double(hash),nentries,1)];
   		Rmax = Rmax + nentries;
 
-	end
-
+    end
+    % disp('And this bit');
 	R = R(1:Rmax,:);
+    % disp('But not this');
 end

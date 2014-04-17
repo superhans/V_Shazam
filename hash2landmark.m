@@ -28,11 +28,11 @@ function L = hash2landmark(H)
 	DF = floor(H2/(2^6));
 	H2 = H2 - (2^6)*DF;
 	
-	% if DF > 2^5
-  	% 	DF = DF-2^6;
-	% end
+	if DF > 2^5
+  		DF = DF-2^6;
+	end
 
-	DF = (DF-2^6).*double(DF>2^5)+DF.*double(DF<=2^5);
+	% DF = (DF-2^6).*double(DF>2^5)+DF.*double(DF<=2^5);
 
 	F2 = F1+DF;
 

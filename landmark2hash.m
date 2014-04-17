@@ -19,16 +19,18 @@ function H = landmark2hash(L,S)
 	H = uint32(L(:,1)); %  H contains t1
 
 	% Make sure F1 is 0..255, not 1..256
-	F1 = rem(round(L(:,2)-1),2^8); 
+	F1 = rem(round(L(:,2)-1),2^10); 
 	DF = round(L(:,3)-L(:,2)); % contains delta-f
-	% if DF < 0
-	%  DF = DF + 2^10; 
-	% end
+	if DF < 0
+	   DF = DF + 2^10; 
+	end
 
-	DF = (DF+2^8).*double(DF<0)+DF.*double(DF>=0);
+	% DF = (DF+2^8).*double(DF<0)+DF.*double(DF>=0);
 
 	DF = rem(DF,2^6); % okay
 	DT = rem(abs(round(L(:,4))), 2^6);
 	H = [S,H,uint32(F1*(2^12)+DF*(2^6)+DT)];
 	% H = [song_id, t1, ]
+
+
 end

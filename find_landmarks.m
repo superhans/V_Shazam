@@ -1,8 +1,12 @@
 function [L] = find_landmarks(video_path, every_nth_frame, track_ID)
 	% L has the form : 
 	% start-time-col start-freq-row end-freq-row delta-time
+    
+    
+	logNni = load('logNni1024.mat');
+	logNni = logNni.l';
 
-	centers = load('centers_256.mat');
+	centers = load('centers_surf_1024.mat');
 	centers = centers.c;
     
     hash = [];
@@ -11,8 +15,8 @@ function [L] = find_landmarks(video_path, every_nth_frame, track_ID)
 		
 	mkdir(pathstr,'/temp');
 	
-	sample_system_command = ['ffmpeg -loglevel quiet -i ',video_path,' -r ',num2str(every_nth_frame),' ',...
-	pathstr,'/temp/%05d.png'];
+	sample_system_command = ['ffmpeg -loglevel quiet -i "',video_path,'" -r ',num2str(every_nth_frame),' "',...
+	pathstr,'/temp/%05d.png"'];
 
 	system(sample_system_command);
 	% now, extract sift features for each image
@@ -25,25 +29,39 @@ function [L] = find_landmarks(video_path, every_nth_frame, track_ID)
 	visual_word_list = zeros(size(centers,2),size(query_files,1));
 
 	for i=1:size(query_files,1)
-
 		% something to extract SIFT
 		file_name = query_files{i};
 		abs_file_path = strcat(pathstr,'/','temp','/',file_name);
 		% disp(abs_file_path);
 		I = imread(abs_file_path);
-		I = single(rgb2gray(I));
+		I = rgb2gray(I); % removed the conversion to single
+		% I = single(I);
 		% I = imresize(I,0.5);
-		[F,D] = vl_sift(I);
-	
+		% [F,D] = vl_sift(I);
+		points = detectSURFFeatures(I);
+		[D, ~] = extractFeatures(I, points);
+		D = D';
 		% assign a visual word to D
 		% size(D)
+		% made some changes to introduce the tf-idf concept
+		% For each SURF feature, find out which 
+
+		vis_word = zeros(size(centers,2),1);
+		nd = size(D,2);
+
 		for j=1:size(D,2)
 			r = repmat(D(:,j),1,size(centers,2));
 			d = sqrt(sum(abs(double(r) - centers).^2));
 			[minval,minpos] = min(d);
-			visual_word_list(minpos,i) = visual_word_list(minpos,i)+1.0/minval;
+			% word j is closest to minpos 
+			vis_word(minpos,1) = vis_word(minpos,1)+1;
+			
 		end
 
+		vis_word = vis_word/nd;
+		vis_word = vis_word.*logNni; 
+        vis_word = vis_word./norm(vis_word);
+		visual_word_list(:,i) = vis_word;
 
 	end
 
@@ -61,9 +79,11 @@ function [all_hash_code] = produce_hash(visual_word_list, track_ID)
 	% first, load spectrogram
 	
 	spectrogram = visual_word_list;
+
+	max(max(spectrogram))
 	
 	% now, find those robust constellation points
-	threshold = 0.03;
+	threshold = 0.15;
 	spectrogram = double(spectrogram > threshold);
 	spectrogram = double(spectrogram > imdilate(spectrogram, [1 1 1;1 0 1; 1 1 1]));
 	% surf(spectrogram(1:100,1:100));colormap(gray);
@@ -97,9 +117,13 @@ function [all_hash_code] = produce_hash(visual_word_list, track_ID)
 			neigh_col = coordinates(nnidx(i,j),2);
 
 			% if too far away, don't bother
-			if(abs(curr_row - neigh_row) > 31 || neigh_col < curr_col)
+			if(abs(curr_row - neigh_row) > 31 || neigh_col < curr_col || (curr_row == neigh_row))
 				continue;
-			end
+            end
+            % added a current row == neighbour row criterion to reduces 
+            % spurious hashes
+            
+            
 			% the above condition is because the target area is always to 
 			% the right of the anchor point.
 			

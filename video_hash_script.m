@@ -75,7 +75,8 @@
 
 	hash_database = [];
 
-	Database_Path = 'More_Serious_Tests/Database'
+	% Database_Path = '../INRIA_JOLY/DB-MPEG1'
+    Database_Path = 'More_Serious_Tests/Database'
 	d = dir(strcat(Database_Path,'/','*.mpg'));                                                                                   
 	isub = ~[d(:).isdir];
 	database_files = {d(isub).name}';
@@ -97,17 +98,28 @@
     save('HashTable.mat','HashTable');
     save('HashTableCounts.mat','HashTableCounts');
     
+%% If you have Hashtable and Hashtable Counts ONLY
+ 
+    global HashTable HashTableCounts
+    x = load('HashTable.mat');
+    HashTable = x.HashTable;
+    y = load('HashTableCounts.mat');
+    HashTableCounts = y.HashTableCounts;
     
+
 %% Match Query : 
 
-	Database_Path = 'More_Serious_Tests/Database'
+	Database_Path = '../INRIA_JOLY/DB-MPEG1'
+    % Database_Path = 'More_Serious_Tests/Database'
 	d = dir(strcat(Database_Path,'/','*.mpg'));                                                                                   
 	isub = ~[d(:).isdir];
 	database_files = {d(isub).name}'
 
     hash_query = [];
 
-	Query_Path = 'Tiny_Tests/Queries'
+	% Query_Path = 'More_Serious_Tests/Queries'
+    % Query_Path = 'Whole_Database/Queries';
+    Query_Path = 'Test_cases/Queries';
 	d = dir(strcat(Query_Path,'/','*.mpg'));                                                                                   
 	isub = ~[d(:).isdir];
 	query_files = {d(isub).name}'
@@ -121,6 +133,43 @@
         R
     end
     
+%% Match Query 
+    
+    fID = fopen('Results_2min_clips.txt','a')
+	Database_Path = '/media/My Passport/INRIA_JOLY/imedia2.rocq.inria.fr/MUSCLE-VCD-2007/DB-MPEG1'
+    % Database_Path = 'More_Serious_Tests/Database'
+	d = dir(strcat(Database_Path,'/','*.mpg'))                                                                                   
+	isub = ~[d(:).isdir];
+	database_files = {d(isub).name}'
 
+    hash_query = [];
+
+	% Query_Path = 'More_Serious_Tests/Queries'
+    % Query_Path = 'Whole_Database/Queries';
+    Query_Path = '/media/My Passport/INRIA_SCRATCH/';
+    d = dir(Query_Path);
+    isub = [d(:).isdir];
+    main_folds = {d(isub).name}';
+    main_folds(ismember(main_folds,{'.','..'})) = []
+    
+    for j=1:size(main_folds,1)
+    
+        disp(strcat(Query_Path,main_folds{j},'/*.mpg'));
+        d = dir(strcat(Query_Path,'/',main_folds{j},'/*.mpg'));                                                                                   
+    	isub = ~[d(:).isdir];
+    	query_files = {d(isub).name}'
+
+    	every_nth_frame = 2;
+
+        for i=1:size(query_files,1)
+           file_name = strcat(Query_Path,main_folds{j},'/',query_files{i})
+           [R,L] = match_query(file_name,every_nth_frame,i);
+           disp(['Input = ',file_name,' Match = ',database_files{R(1,1)}]);
+           fprintf(fID,'%s\n', ['Input = ',file_name,' Match = ',database_files{R(1,1)}]);
+           dlmwrite('Results_2min_clips.txt',R(1:5,:),'-append','delimiter','\t','newline','pc');
+           fprintf(fID,'\n');
+        end
+
+    end
     
     

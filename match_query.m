@@ -55,6 +55,8 @@ disp(['landmarks ',num2str(size(Lq,1)),' -> ', num2str(size(Hq,1)),' hashes']);
 Rt = get_hash_hits(Hq);
 nr = size(Rt,1);
 
+
+
 if nr > 0
 
   % Find all the unique tracks referenced
@@ -62,8 +64,9 @@ if nr > 0
   utrkcounts = diff([xx',nr]);
 
   [utcvv,utcxx] = sort(utrkcounts, 'descend');
-  % Keep at most 20 per hit
-  utcxx = utcxx(1:min(20,length(utcxx)));
+  % Keep at most 20 per hit - IS THIS THE PROBLEM ?
+  utcxx = utcxx(1:min(200,length(utcxx)));
+  % disp('Okay');
   utrkcounts = utrkcounts(utcxx);
   utrks = utrks(utcxx);
   % utrkcounts contains number of hits sorted in descending order
@@ -85,6 +88,7 @@ if nr > 0
     R(i,:) = [utrks(i),sum(abs(tkR(:,2)-dts(xx(1)))<=1),dts(xx(1)),size(tkR,1)];
   end
 
+   
   % Sort by descending match count
   [vv,xx] = sort(R(:,2),'descend');
   R = R(xx,:);
@@ -102,17 +106,19 @@ if nr > 0
     L(i,1) = L(i,1)+Hq(hqix,2);
   end
 
-
+  
   % Return no more than 100 hits, and only down to 10% the #hits in
   % most popular
   maxrtns = 100;
   if size(R,1) > maxrtns
     R = R(1:maxrtns,:);
   end
+  
+  % disp('Okayy');
   maxhits = R(1,2);
   nuffhits = R(:,2)>(0.1*maxhits);
   %R = R(nuffhits,:);
-
+%    disp('Here as well');
 else
   R = zeros(0,4);
   disp('*** NO HITS FOUND ***');
